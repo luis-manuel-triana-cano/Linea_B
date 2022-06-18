@@ -1,90 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src = " https://unpkg.com/leaflet@1.6.0/dist/leaflet.js "></script>
-    <link rel = "stylesheet" href = " https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
-    <style>
-        #map {
-            width: 100%;
-            height: 580px;
-            box-shadow: 5px 5px 5px #888;
-        }
-    </style>
-</head>
-<body>
-    <div id='map'></div>
-    <script>
-        var OMS = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>' + 'contributors', 
-            maxZoom: 20
-        });
+    <head>
+        <meta charset="UTF-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>El Mundo</title>
+        <h1>Mi Primer Mapa En Leaflet.</h1>
+        <script src = " https://unpkg.com/leaflet@1.6.0/dist/leaflet.js "></script>
+        <link rel = "stylesheet" href = " https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+        <script>src = " https://unpkg.com/leaflet.markercluster@1.4.1/dist/"</script>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+        <link rel="stylesheet" href="../css/styledLayerControl.css" />
+        <script src="../src/styledLayerControl.js"></script>
+        <style>
+            #map {
+                width: 100%;
+                height: 580px;
+                box-shadow: 5px 5px 5px #888;
+            }
+        </style>
+        <script type="text/javascript" src="paises_geojson.js"></script>
+        <script type="text/javascript" src="depart_colom.js"></script>
+        <script type="text/javascript" src="ciudades_geojson.js"></script>
+        <script type="text/javascript" src="hidrografia_geojson.js"></script>
+    </head>
+    <body>
+        <div id='map'></div>
+        <script>
+            var osmUrl='http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+	        var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+            var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+            
+            var map = L.map('map', {
+                center: [1.61438, -75.60623], /*coordenadas cuidad florencia*/
+                zoom: 4,
+                scrollWheelZoom: true
+            });
 
-        var map = L.map('map', {
-            center: [1.61438, -75.60623], /*coordenadas cuidad florencia*/
-            layers: [OMS],
-            zoom: 15,
-            scrollWheelZoom: true
-        });
+            map.addLayer(osm);
 
-        L.control.scale().addTo(map);
+            var paises_style = {
+                'color': "#e12a2a",
+                'weight': 2,
+                'opacity': 0.6
+            };
 
-        var myIcon = L.icon({
-            iconUrl: ' https://th.bing.com/th/id/OIP.cnVdF5crLgxeC_mK6cuQggHaGY?pid=ImgDet&rs=1',
-            iconSize: [30, 30],
-            popupAnchor: [-1, -10]
-        });
-        
-        var marker = L.marker([1.620575222283137, -75.60428021611501], {
-            icon: myIcon,
-            draggable: false,
-            title: "<<<.Clic para el detalle.>>>"
-        }).addTo(map).bindPopup("Universidad de la amazonia: <b>www.uniamazonia.edu.co </b>");
+            function getColor(d) {
+                return d > 100000000 ? '#800026' :            
+                    d > 50000000 ? '#BD0026' :
+                    d > 20000000 ? '#E31A1C' :
+                    d > 10000000 ? '#FC4E2A' :
+                    d > 5000000 ? '#FD8D3C' :
+                    d > 2000000 ? '#FEB24C' :
+                    d > 1000000 ? '#FED976' :
+                '#FFEDA0';
+            };
 
-        var marker = L.marker([1.61389, -75.6128], { /*coordenadas alcaldia florencia*/
-            draggable: false,
-            title: "<<<.Clic para el detalle.>>>"
-        }).addTo(map).bindPopup("Alcaldia de Florencia: <b>https://www.florencia.gov.co/ </b>");
+            function style_paises(feature) {
+                return {
+                    fillColor: getColor(feature.properties.pop_est),
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.5
+                };
+            };
 
-        var circle = L.circle([1.61389, -75.6128], 500, { /*coordenadas alcaldia florencia*/
-            color: 'red',
-            fillColor: '#f03',
-            fillOpacity: 0.5
-        }).addTo(map).bindPopup("¡¡¡.Rango.!!!");
+            function popup_paises(feature, layer) {
+                if (feature.properties && feature.properties.name) { layer.bindPopup(feature.properties.name);
+                }
+            };
 
-        var marker = L.marker([1.6150238165179678, -75.61330540597133], { /*coordenadas Plaza Santander*/
-            draggable: false,
-            title: "<<<.Clic para el detalle.>>>"
-        }).addTo(map).bindPopup("Plaza Santander: <b> </b>");
+            L.geoJson(paises, {
+                style: style_paises,
+                onEachFeature: popup_paises
+            }).addTo(map);
 
-        var polygon = L.polygon([
-            [1.614746991544962, -75.612822035327554],
-            [1.61508503369987, -75.612915996462107],
-            [1.615374041721225, -75.613013980910182],
-            [1.615287959575653, -75.613298965618014],
-            [1.61517295986414, -75.613638013601303],
-            [1.614951007068157, -75.613577999174595],
-            [1.614583963528276, -75.613473979756236],
-            [1.614667028188705, -75.613144990056753],
-            [1.614746991544962, -75.612822035327554],
-        ]).addTo(map).bindPopup('[.Poligono Plaza Santander.]');
+            var departamento_style = {
+                'color': '#777',
+                'weight': 2,
+                'opacity': 1
+            };
 
-        var pointA = new L.LatLng(1.6112111111111, -75.603733333333); 
-        var pointB = new L.LatLng(1.6106416666667, -75.604388888889);
-        var pointC = new L.LatLng(1.6126166666667, -75.606058333333);
-        var pointD = new L.LatLng(1.6132333333333, -75.606041666667);
-        var pointE = new L.LatLng(1.6139472222222, -75.605486111111);
-        var pointF = new L.LatLng(1.6149638888889, -75.604352777778);
-        var pointG = new L.LatLng(1.6154527777778, -75.604088888889); 
-        var pointH = new L.LatLng(1.61715, -75.6053);
-        var pointI = new L.LatLng(1.6188361111111, -75.606405555556);
-        var pointJ = new L.LatLng(1.6201472222222, -75.605111111111);
-        var latlngs = [pointA, pointB, pointC, pointD, pointE, pointF, pointG, pointH, pointI, pointJ];
-        var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map).bindPopup('[...Luis Triana De la casa a la U...]');
+            function style_depart_colom(feature) {
+                return {
+                    fillColor: getColor(feature.properties.SHAPE_AREA),
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.7
+                };
+            };
 
-    </script>
-</body>
+            function popup_depart_colom(feature, layer) {
+                if (feature.properties && feature.properties.COD_DANE) { layer.bindPopup(feature.properties.COD_DANE);
+                }
+            };
+
+            L.geoJson(departamento, {
+                style: style_depart_colom,
+                onEachFeature: popup_depart_colom
+            }).addTo(map);
+
+            function capital_S_N(d){
+                return d == 'S' ? myIcon_capital = l.icon({
+                    iconUrl: ' https://th.bing.com/th/id/OIP.emvGVoN3UOGMhm2El9w_RgHaHa?pid=ImgDet&rs=1',
+                    iconSize: [30, 30],
+                    popupAnchor: [-1, -10]
+                }): myIcon_no_capital = icon({
+                    iconUrl: ' https://i.pinimg.com/736x/c9/f1/62/c9f16231eccc7c73cb50d76878de7e7d.jpg',
+                    iconSize: [30, 30],
+                    popupAnchor: [-1, -10]
+                })
+            };
+
+            function style_ciudad(feature) {
+                return {
+                    icon : capital_S_N(feature.properties.CAPITAL)
+                };
+            };
+
+            function popup_ciudad(feature, layer) {
+                if (feature.properties && feature.properties.CIUDAD) { layer.bindPopup(feature.properties.CIUDAD);
+                }
+            };
+
+            L.geoJson(ciudades, {
+                style: style_ciudad,
+                onEachFeature: popup_ciudad
+            }).addTo(map);
+
+            var OSMbasemap = new L.layergroup();
+            osm.addTo(OSMbasemap);
+
+            var mis_capas = new L.layergroup();
+            L.paises.addTo(mis_capas),
+            L.departamento.addTo(mis_capas),
+            L.ciudades.addTo(mis_capas);
+
+            var basemap =[ {
+                groupName : "OSMbasemap",
+                layers    : {
+                    "OpenStreetMaps" : osm
+                }
+            }];
+
+            var overlay = [{
+                groupName : "mis_capas",
+                expanded  : true,
+                layers    : { 
+                    "Paises del Mundo." : paises, 
+                    "Departamentos de Colombia." : departamento, 
+                    "Ciudades del mundo." : ciudades
+                }
+            }];
+
+            var options = {
+                container_width 	: "500px",
+                container_maxHeight : "500px", 
+                group_maxHeight     : "80px",
+                exclusive       	: false
+            };
+
+            var control = L.Control.styledLayerControl(baseMap, overlay, options);
+            map.addControl(control);
+
+            var osm2 = new L.TileLayer(osmUrl, {minZoom: 0, maxZoom: 13, attribution: osmAttrib});
+            var miniMap = new L.Control.MiniMap(osm2).addTo(map);
+        </script>
+    </body>
 </html>
